@@ -1,0 +1,180 @@
+# Components
+## Input Parameters
+### Essential Input parameters
+For the input parameters, we usually need to define three options, *id*, *type*, and *prefix*. The type can be *string*, *int*, *long*, *float*, *double*, and so on. More detail can be found at: <https://www.commonwl.org/v1.0/CommandLineTool.html#CWLType>.
+
+A `InputParam` constructor is used to define a list of input objects for the command tool, such as "prefix" for the parameter flags and "position" for the paramter orders. More descriptions are available in the CWL specification <https://www.commonwl.org/v1.0/CommandLineTool.html#CommandLineBinding>.
+
+Here is an example from the CWL user guide(<http://www.commonwl.org/user_guide/03-input/>). We defined the `echo` with different type of input parameters by `InputParam`, and the `stdout` option can be used to caputre the standard output stream into a file:
+
+```{r}
+e1 <- InputParam(id = "flag", type = "boolean", prefix = "-f")
+e2 <- InputParam(id = "string", type = "string", prefix = "-s")
+e3 <- InputParam(id = "int", type = "int", prefix = "-i")
+e4 <- InputParam(id = "file", type = "File", prefix = "--file=", separate = FALSE)
+echoA <- cwlParam(baseCommand = "echo",
+                  inputs = InputParamList(e1, e2, e3, e4),
+                  stdout = "output.txt")
+```
+
+Then we give it a try by setting values for the inputs:
+```{r}
+echoA$flag <- TRUE
+echoA$string <- "Hello"
+echoA$int <- 1
+
+tmpfile <- tempfile()
+write("World", tmpfile)
+echoA$file <- tmpfile
+
+r2 <- runCWL(echoA, outdir = tempdir())
+r2$command
+```
+
+### Array Inputs
+Taking a similar example to the CWL user guide described above, we can define three different type of array as inputs: 
+```{r}
+a1 <- InputParam(id = "A", type = "string[]", prefix = "-A")
+a2 <- InputParam(id = "B",
+                 type = InputArrayParam(items = "string",
+                                        prefix="-B=", separate = FALSE))
+a3 <- InputParam(id = "C", type = "string[]", prefix = "-C=",
+                 itemSeparator = ",", separate = FALSE)
+echoB <- cwlParam(baseCommand = "echo",
+                 inputs = InputParamList(a1, a2, a3))
+```
+
+We then set values for the three inputs:
+```{r}
+echoB$A <- letters[1:3]
+echoB$B <- letters[4:6]
+echoB$C <- letters[7:9]
+echoB
+```
+
+Now we can check whether the command behaves as we expected:
+```{r}
+r3 <- runCWL(echoB, outdir = tempdir())
+r3$command
+```
+
+## Output Parameters
+### Capturing Output
+The outputs, similar to the inputs, is a list of output parameters. Three options, *id*, *type* and *glob*, can be defined. The *glob* option is used to define a pattern to find files relative to the output directory.
+
+Here is an example to unzip a compressed `gz` file. First, we generate a compressed R script file:
+```{r}
+zzfil <- file.path(tempdir(), "sample.R.gz")
+zz <- gzfile(zzfil, "w")
+cat("sample(1:10, 5)", file = zz, sep = "\n")
+close(zz)
+```
+
+We then define a `cwlParam` object to use "gzip" to uncompress an input file:
+```{r}
+ofile <- "sample.R"
+z1 <- InputParam(id = "uncomp", type = "boolean", prefix = "-d")
+z2 <- InputParam(id = "out", type = "boolean", prefix = "-c")
+z3 <- InputParam(id = "zfile", type = "File")
+o1 <- OutputParam(id = "rfile", type = "File", glob = ofile)
+gz <- cwlParam(baseCommand = "gzip",
+               inputs = InputParamList(z1, z2, z3),
+               outputs = OutputParamList(o1),
+               stdout = ofile)
+```
+
+Now the `gz` object can be used to uncompress the previously generated compressed file:
+```{r}
+gz$uncomp <- TRUE
+gz$out <- TRUE
+gz$zfile <- zzfil
+r4 <- runCWL(gz, outdir = tempdir())
+r4$output
+```
+
+Or we can use `arguments` to set some default parameters:
+```{r}
+z1 <- InputParam(id = "zfile", type = "File")
+o1 <- OutputParam(id = "rfile", type = "File", glob = ofile)
+Gz <- cwlParam(baseCommand = "gzip",
+               arguments = list("-d", "-c"),
+               inputs = InputParamList(z1),
+               outputs = OutputParamList(o1),
+               stdout = ofile)
+Gz
+Gz$zfile <- zzfil
+r4a <- runCWL(Gz, outdir = tempdir())
+```
+
+To make it for general usage, we can define a pattern with javascript to *glob* the output, which requires `node` to be installed in your system PATH:
+```{r}
+pfile <- "$(inputs.zfile.path.split('/').slice(-1)[0].split('.').slice(0,-1).join('.'))"
+```
+
+Or we can directly use the CWL built in file property, `nameroot`:
+```{r}
+pfile <- "$(inputs.zfile.nameroot)"
+o2 <- OutputParam(id = "rfile", type = "File", glob = pfile)
+req1 <- list(class = "InlineJavascriptRequirement")
+GZ <- cwlParam(baseCommand = c("gzip", "-d", "-c"),
+               requirements = list(), ## assign list(req1) if node installed.
+               inputs = InputParamList(z1),
+               outputs = OutputParamList(o2),
+               stdout = pfile)
+GZ$zfile <- zzfil
+r4b <- runCWL(GZ, outdir = tempdir())
+```
+
+### Array Outputs
+
+We can also capture multiple output files with the `glob` pattern:
+```{r}
+a <- InputParam(id = "a", type = InputArrayParam(items = "string"))
+b <- OutputParam(id = "b", type = OutputArrayParam(items = "File"), glob = "*.txt")
+touch <- cwlParam(baseCommand = "touch", inputs = InputParamList(a), outputs = OutputParamList(b))
+touch$a <- c("a.txt", "b.gz", "c.txt")
+r5 <- runCWL(touch, outdir = tempdir())
+r5$output
+```
+
+### Standard output
+
+Usually, the `stdout` option is a string or an expression of output
+file name from the command tool. The command's standard output stream
+will be captured into a file written to the designated output
+directory. When the `stdout` field is defined, an output parameter
+with the type of "stdout" should be also assigned with no
+"outputBinding" set.
+
+An example for command tool "cat" is defined with `stdout` field in
+the output, with the name passed from the input parameter "p2": 
+
+```{r}
+## define Cat
+p1 <- InputParam(id = "infiles", type = "File[]")
+p2 <- InputParam(id = "outfile", type = "string",
+                 default = "catout.txt", position = -1)
+Cat <- cwlParam(baseCommand = "cat",
+                inputs = InputParamList(p1, p2),
+                stdout = "$(inputs.outfile)")
+## assign inputs
+afile <- file.path(tempdir(), "a.txt")
+bfile <- file.path(tempdir(), "b.txt")
+write("a", afile)
+write("b", bfile)
+Cat$infiles <- list(afile, bfile)
+## run
+r6 <- runCWL(Cat, outdir = tempdir())
+r6$command
+```
+
+```{block2, type='tips'}
+In this example, we used the parameter "p2" to pass the name to the
+standard output.
+
+In the `InputParam` of "p2", the position is assigned to a negative
+value (-1), which means the parameters will not be used in the command
+and only uses for passing variable. To write the "Cat" tool to a CWL
+file, the "inputBinding" field will be skipped for this parameter.
+
+```
