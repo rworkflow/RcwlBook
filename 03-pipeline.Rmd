@@ -4,7 +4,7 @@ We can connect multiple tools into a pipeline. Here is an example to uncompress 
 We first define a simple `Rscript` tool without using docker:
 ```{r}
 d1 <- InputParam(id = "rfile", type = "File")
-Rs <- cwlParam(baseCommand = "/usr/bin/Rscript",
+Rs <- cwlParam(baseCommand = "Rscript",
                inputs = InputParamList(d1))
 Rs
 ```
