@@ -1,8 +1,0 @@
-
-# Other Sequencing pipelines 
-
-## ChiP-Seq
-
-## ATAC-Seq
-
-## Microbiome Sequencing
