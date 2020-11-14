@@ -1,0 +1,78 @@
+# Writing Pipeline
+We can connect multiple tools into a pipeline. Here is an example to uncompress an R script and execute it with `Rscript`.
+
+We first define a simple `Rscript` tool without using docker:
+```{r}
+d1 <- InputParam(id = "rfile", type = "File")
+Rs <- cwlParam(baseCommand = "Rscript",
+               inputs = InputParamList(d1))
+Rs
+```
+
+Here is the test run:
+```{r}
+Rs$rfile <- r4$output
+tres <- runCWL(Rs, outdir = tempdir())
+readLines(tres$output)
+```
+
+The pipeline includes two steps, decompressed by `GZ` and compiled by `Rs`. The input file is a compressed file and the output file would be the output `Rout` from `Rs`.
+
+First we need to define the direct inputs and outputs from `GZ` and `Rs`, respectively:
+```{r}
+i1 <- InputParam(id = "cwl_zfile", type = "File")
+o1 <- OutputParam(id = "cwl_cout", type = "File", outputSource = "Compile/output")
+```
+For the input "cwl_zifle", it refers to the `GZ` input `zfile`.  The output "cwl_cout" will be the outcome of `Rs` output `Rout`.
+
+The `cwlStepParam` is used to define `inputs` and `outputs`, and the `Step` function is used to define the two steps. The `run` option refers to the corresponding `cwlParam` object and the `In` option should be linked to the input parameters defined by `cwlStepParam`. At the end, we use `+` to connect all steps:
+```{r}
+cwl <- cwlStepParam(inputs = InputParamList(i1),
+                    outputs = OutputParamList(o1))
+s1 <- Step(id = "Uncomp", run = GZ,
+           In = list(zfile = "cwl_zfile"))
+s2 <- Step(id = "Compile", run = Rs,
+           In = list(rfile = "Uncomp/rfile"))
+cwl <- cwl + s1 + s2
+cwl
+```
+
+Let's run the pipeline:
+```{r}
+cwl$cwl_zfile <- zzfil
+r7 <- runCWL(cwl, outdir = tempdir())
+readLines(r7$output)
+```
+
+## Scattering pipeline
+The scattering feature can specify the associated workflow steps or subworkflows to execute separately over a list of input elements. To use this feature, `ScatterFeatureRequirement` must be specified in the workflow requirement. Different `scatter` methods can be used in the associated steps to decompose the input into a discrete set of jobs. More details can be found at: https://www.commonwl.org/v1.0/Workflow.html#WorkflowStep.
+
+Here is an example to execute multiple R scripts. First, we need to set the input and output types to be an array of "File", and add the requirments. In the "Compile" step, the scattering input is required to be set with the `scatter` option:
+```{r}
+i2 <- InputParam(id = "cwl_rfiles", type = "File[]")
+o2 <- OutputParam(id = "cwl_couts", type = "File[]", outputSource = "Compile/output")
+req1 <- list(class = "ScatterFeatureRequirement")
+
+cwl2 <- cwlStepParam(requirements = list(req1),
+                     inputs = InputParamList(i2),
+                     outputs = OutputParamList(o2))
+s1 <- Step(id = "Compile", run = Rs,
+           In = list(rfile = "cwl_rfiles"),
+           scatter = "rfile")
+cwl2 <- cwl2 + s1
+cwl2
+```
+
+Now multiple R scripts can be assigned to the workflow inputs and executed:
+```{r}
+cwl2$cwl_rfiles <- c(r4b$output, r4b$output)
+r8 <- runCWL(cwl2, outdir = tempdir())
+r8$output
+```
+
+## Pipeline plot
+The function `plotCWL` can be used to visualize the relationship of inputs, outputs and the components for a tool or pipeline:
+
+```{r}
+plotCWL(cwl)
+```
