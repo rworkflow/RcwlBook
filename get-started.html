@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+<head>
+
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <title>Chapter 2 Get started | Bioinformatics tools and pipelines using R and CWL</title>
+  <meta name="description" content="A manual to wrap Bioinformatics tools and workflows with Common Workflow Language using the Rcwl package." />
+  <meta name="generator" content="bookdown 0.21 and GitBook 2.6.7" />
+
+  <meta property="og:title" content="Chapter 2 Get started | Bioinformatics tools and pipelines using R and CWL" />
+  <meta property="og:type" content="book" />
+  
+  
+  <meta property="og:description" content="A manual to wrap Bioinformatics tools and workflows with Common Workflow Language using the Rcwl package." />
+  <meta name="github-repo" content="rstudio/bookdown-demo" />
+
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="Chapter 2 Get started | Bioinformatics tools and pipelines using R and CWL" />
+  
+  <meta name="twitter:description" content="A manual to wrap Bioinformatics tools and workflows with Common Workflow Language using the Rcwl package." />
+  
+
+<meta name="author" content="Qiang Hu" />
+<meta name="author" content="Qian Liu" />
+
+
+<meta name="date" content="2021-02-27" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+  
+  
+<link rel="prev" href="intro.html"/>
+<link rel="next" href="wrap-command-line-tools.html"/>
+<script src="libs/header-attrs-2.7/header-attrs.js"></script>
+<script src="libs/jquery-2.2.3/jquery.min.js"></script>
+<link href="libs/gitbook-2.6.7/css/style.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-table.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-bookdown.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-highlight.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-search.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-fontsettings.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-clipboard.css" rel="stylesheet" />
+
+
+
+
+
+
+
+
+
+<script src="libs/accessible-code-block-0.0.1/empty-anchor.js"></script>
+<script src="libs/htmlwidgets-1.5.3/htmlwidgets.js"></script>
+<script src="libs/viz-1.8.2/viz.js"></script>
+<link href="libs/DiagrammeR-styles-0.2/styles.css" rel="stylesheet" />
+<script src="libs/grViz-binding-1.0.6.1/grViz.js"></script>
+
+
+<style type="text/css">
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+</style>
+
+<link rel="stylesheet" href="style.css" type="text/css" />
+</head>
+
+<body>
+
+
+
+  <div class="book without-animation with-summary font-size-2 font-family-1" data-basepath=".">
+
+    <div class="book-summary">
+      <nav role="navigation">
+
+<ul class="summary">
+<li><a href="./">Rcwl and Case Study</a></li>
+
+<li class="divider"></li>
+<li class="chapter" data-level="" data-path="index.html"><a href="index.html"><i class="fa fa-check"></i>Preface</a>
+<ul>
+<li class="chapter" data-level="0.1" data-path="index.html"><a href="index.html#r-package-installation"><i class="fa fa-check"></i><b>0.1</b> R package installation</a></li>
+<li class="chapter" data-level="0.2" data-path="index.html"><a href="index.html#system-requirements"><i class="fa fa-check"></i><b>0.2</b> System requirements</a></li>
+<li class="chapter" data-level="0.3" data-path="index.html"><a href="index.html#docker"><i class="fa fa-check"></i><b>0.3</b> Docker</a></li>
+<li class="chapter" data-level="0.4" data-path="index.html"><a href="index.html#structure-of-the-book"><i class="fa fa-check"></i><b>0.4</b> Structure of the book</a></li>
+<li class="chapter" data-level="0.5" data-path="index.html"><a href="index.html#r-session-information"><i class="fa fa-check"></i><b>0.5</b> R session information</a></li>
+</ul></li>
+<li class="chapter" data-level="1" data-path="intro.html"><a href="intro.html"><i class="fa fa-check"></i><b>1</b> Introduction</a></li>
+<li class="chapter" data-level="2" data-path="get-started.html"><a href="get-started.html"><i class="fa fa-check"></i><b>2</b> Get started</a></li>
+<li class="chapter" data-level="3" data-path="wrap-command-line-tools.html"><a href="wrap-command-line-tools.html"><i class="fa fa-check"></i><b>3</b> Wrap command line tools</a>
+<ul>
+<li class="chapter" data-level="3.1" data-path="wrap-command-line-tools.html"><a href="wrap-command-line-tools.html#input-parameters"><i class="fa fa-check"></i><b>3.1</b> Input Parameters</a>
+<ul>
+<li class="chapter" data-level="3.1.1" data-path="wrap-command-line-tools.html"><a href="wrap-command-line-tools.html#essential-input-parameters"><i class="fa fa-check"></i><b>3.1.1</b> Essential Input parameters</a></li>
+<li class="chapter" data-level="3.1.2" data-path="wrap-command-line-tools.html"><a href="wrap-command-line-tools.html#array-inputs"><i class="fa fa-check"></i><b>3.1.2</b> Array Inputs</a></li>
+</ul></li>
+<li class="chapter" data-level="3.2" data-path="wrap-command-line-tools.html"><a href="wrap-command-line-tools.html#output-parameters"><i class="fa fa-check"></i><b>3.2</b> Output Parameters</a>
+<ul>
+<li class="chapter" data-level="3.2.1" data-path="wrap-command-line-tools.html"><a href="wrap-command-line-tools.html#capturing-output"><i class="fa fa-check"></i><b>3.2.1</b> Capturing Output</a></li>
+<li class="chapter" data-level="3.2.2" data-path="wrap-command-line-tools.html"><a href="wrap-command-line-tools.html#array-outputs"><i class="fa fa-check"></i><b>3.2.2</b> Array Outputs</a></li>
+<li class="chapter" data-level="3.2.3" data-path="wrap-command-line-tools.html"><a href="wrap-command-line-tools.html#standard-output"><i class="fa fa-check"></i><b>3.2.3</b> Standard output</a></li>
+</ul></li>
+</ul></li>
+<li class="chapter" data-level="4" data-path="writing-pipeline.html"><a href="writing-pipeline.html"><i class="fa fa-check"></i><b>4</b> Writing Pipeline</a>
+<ul>
+<li class="chapter" data-level="4.1" data-path="writing-pipeline.html"><a href="writing-pipeline.html#scattering-pipeline"><i class="fa fa-check"></i><b>4.1</b> Scattering pipeline</a></li>
+<li class="chapter" data-level="4.2" data-path="writing-pipeline.html"><a href="writing-pipeline.html#pipeline-plot"><i class="fa fa-check"></i><b>4.2</b> Pipeline plot</a></li>
+</ul></li>
+<li class="chapter" data-level="5" data-path="toolpipeline-execution.html"><a href="toolpipeline-execution.html"><i class="fa fa-check"></i><b>5</b> Tool/pipeline execution</a>
+<ul>
+<li class="chapter" data-level="5.1" data-path="toolpipeline-execution.html"><a href="toolpipeline-execution.html#running-tools-in-docker"><i class="fa fa-check"></i><b>5.1</b> Running Tools in Docker</a></li>
+<li class="chapter" data-level="5.2" data-path="toolpipeline-execution.html"><a href="toolpipeline-execution.html#running-tools-in-cluster-server"><i class="fa fa-check"></i><b>5.2</b> Running Tools in Cluster server</a></li>
+<li class="chapter" data-level="5.3" data-path="toolpipeline-execution.html"><a href="toolpipeline-execution.html#web-application"><i class="fa fa-check"></i><b>5.3</b> Web Application</a>
+<ul>
+<li class="chapter" data-level="5.3.1" data-path="toolpipeline-execution.html"><a href="toolpipeline-execution.html#cwlprocess-example"><i class="fa fa-check"></i><b>5.3.1</b> cwlProcess example</a></li>
+<li class="chapter" data-level="5.3.2" data-path="toolpipeline-execution.html"><a href="toolpipeline-execution.html#cwlprocess-to-shiny-app"><i class="fa fa-check"></i><b>5.3.2</b> cwlProcess to Shiny App</a></li>
+</ul></li>
+</ul></li>
+<li class="chapter" data-level="6" data-path="rcwlpipelines.html"><a href="rcwlpipelines.html"><i class="fa fa-check"></i><b>6</b> RcwlPipelines</a>
+<ul>
+<li class="chapter" data-level="6.1" data-path="rcwlpipelines.html"><a href="rcwlpipelines.html#rcwl-recipes-and-cwl-scripts"><i class="fa fa-check"></i><b>6.1</b> Rcwl recipes and CWL scripts</a></li>
+<li class="chapter" data-level="6.2" data-path="rcwlpipelines.html"><a href="rcwlpipelines.html#rcwlpipelines-core-functions"><i class="fa fa-check"></i><b>6.2</b> RcwlPipelines core functions</a>
+<ul>
+<li class="chapter" data-level="6.2.1" data-path="rcwlpipelines.html"><a href="rcwlpipelines.html#cwlupdate"><i class="fa fa-check"></i><b>6.2.1</b> <code>cwlUpdate</code></a></li>
+<li class="chapter" data-level="6.2.2" data-path="rcwlpipelines.html"><a href="rcwlpipelines.html#cwlsearch"><i class="fa fa-check"></i><b>6.2.2</b> <code>cwlSearch</code></a></li>
+<li class="chapter" data-level="6.2.3" data-path="rcwlpipelines.html"><a href="rcwlpipelines.html#cwlload"><i class="fa fa-check"></i><b>6.2.3</b> <code>cwlLoad</code></a></li>
+</ul></li>
+<li class="chapter" data-level="6.3" data-path="rcwlpipelines.html"><a href="rcwlpipelines.html#toolpipeline-customization"><i class="fa fa-check"></i><b>6.3</b> Tool/pipeline customization</a></li>
+<li class="chapter" data-level="6.4" data-path="rcwlpipelines.html"><a href="rcwlpipelines.html#build-a-pipeline"><i class="fa fa-check"></i><b>6.4</b> Build a pipeline</a></li>
+</ul></li>
+<li class="chapter" data-level="7" data-path="dnaseq-alignment.html"><a href="dnaseq-alignment.html"><i class="fa fa-check"></i><b>7</b> DNAseq alignment</a></li>
+<li class="chapter" data-level="8" data-path="dnaseq-variant-calling.html"><a href="dnaseq-variant-calling.html"><i class="fa fa-check"></i><b>8</b> DNAseq variant calling</a></li>
+<li class="chapter" data-level="9" data-path="bulk-rnaseq.html"><a href="bulk-rnaseq.html"><i class="fa fa-check"></i><b>9</b> Bulk RNAseq</a>
+<ul>
+<li class="chapter" data-level="9.1" data-path="bulk-rnaseq.html"><a href="bulk-rnaseq.html#prepare-data"><i class="fa fa-check"></i><b>9.1</b> Prepare data</a></li>
+<li class="chapter" data-level="9.2" data-path="bulk-rnaseq.html"><a href="bulk-rnaseq.html#submit-parallel-jobs"><i class="fa fa-check"></i><b>9.2</b> Submit parallel jobs</a></li>
+<li class="chapter" data-level="9.3" data-path="bulk-rnaseq.html"><a href="bulk-rnaseq.html#qc-summary"><i class="fa fa-check"></i><b>9.3</b> QC Summary</a></li>
+<li class="chapter" data-level="9.4" data-path="bulk-rnaseq.html"><a href="bulk-rnaseq.html#abundances-summary"><i class="fa fa-check"></i><b>9.4</b> Abundances summary</a></li>
+<li class="chapter" data-level="9.5" data-path="bulk-rnaseq.html"><a href="bulk-rnaseq.html#transcriptome-quantification"><i class="fa fa-check"></i><b>9.5</b> transcriptome quantification</a>
+<ul>
+<li class="chapter" data-level="9.5.1" data-path="bulk-rnaseq.html"><a href="bulk-rnaseq.html#kallisto"><i class="fa fa-check"></i><b>9.5.1</b> Kallisto</a></li>
+<li class="chapter" data-level="9.5.2" data-path="bulk-rnaseq.html"><a href="bulk-rnaseq.html#salmon"><i class="fa fa-check"></i><b>9.5.2</b> salmon</a></li>
+</ul></li>
+</ul></li>
+<li class="chapter" data-level="10" data-path="single-cell-rnaseq.html"><a href="single-cell-rnaseq.html"><i class="fa fa-check"></i><b>10</b> single cell RNAseq</a></li>
+<li class="chapter" data-level="11" data-path="mirna.html"><a href="mirna.html"><i class="fa fa-check"></i><b>11</b> miRNA</a>
+<ul>
+<li class="chapter" data-level="11.0.1" data-path="mirna.html"><a href="mirna.html#reference-index"><i class="fa fa-check"></i><b>11.0.1</b> Reference index</a></li>
+<li class="chapter" data-level="11.0.2" data-path="mirna.html"><a href="mirna.html#run-mirdeep2-pipeline"><i class="fa fa-check"></i><b>11.0.2</b> Run miRDeep2 pipeline</a></li>
+</ul></li>
+<li class="chapter" data-level="" data-path="references.html"><a href="references.html"><i class="fa fa-check"></i>References</a></li>
+<li class="divider"></li>
+<li><a href="https://github.com/rstudio/bookdown" target="blank">Published with bookdown</a></li>
+
+</ul>
+
+      </nav>
+    </div>
+
+    <div class="book-body">
+      <div class="body-inner">
+        <div class="book-header" role="navigation">
+          <h1>
+            <i class="fa fa-circle-o-notch fa-spin"></i><a href="./">Bioinformatics tools and pipelines using R and CWL</a>
+          </h1>
+        </div>
+
+        <div class="page-wrapper" tabindex="-1" role="main">
+          <div class="page-inner">
+
+            <section class="normal" id="section-">
+<div id="get-started" class="section level1" number="2">
+<h1><span class="header-section-number">Chapter 2</span> Get started</h1>
+<p><code>cwlProcess</code> is the main constructor function to wrap a command line
+tool into an <em>R</em> tool as a <code>cwlProcess</code> object (S4 class). Let’s
+start with a simple example to wrap the <code>echo</code> command and execute
+<code>echo hello world</code> in <em>R</em>.</p>
+<p>First, we need to define the input parameter for the base command
+<code>echo</code>, here it is a string without a prefix. An <code>id</code> argument is
+required here.</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="get-started.html#cb5-1"></a>input1 &lt;-<span class="st"> </span><span class="kw">InputParam</span>(<span class="dt">id =</span> <span class="st">&quot;sth&quot;</span>)</span></code></pre></div>
+<p>Second, we can construct a <code>cwlProcess</code> object by specifying the
+<code>baseCommand</code> for the command line tool, and <code>InputParamList</code> for the
+input parameters.</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="get-started.html#cb6-1"></a>echo &lt;-<span class="st"> </span><span class="kw">cwlProcess</span>(<span class="dt">baseCommand =</span> <span class="st">&quot;echo&quot;</span>, <span class="dt">inputs =</span> <span class="kw">InputParamList</span>(input1))</span></code></pre></div>
+<p>Now we have converted the command line tool <code>echo</code> into an <em>R</em> tool:
+an <em>R</em> object of class <code>cwlProcess</code> with the name of <code>echo</code>. We can
+take a look at the this <em>R</em> object and use some utility functions to
+extract specific information.</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="get-started.html#cb7-1"></a>echo</span></code></pre></div>
+<pre><code>## class: cwlProcess 
+##  cwlClass: CommandLineTool 
+##  cwlVersion: v1.0 
+##  baseCommand: echo 
+## inputs:
+##   sth (string):  
+## outputs:
+## output:
+##   type: stdout</code></pre>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="get-started.html#cb9-1"></a><span class="kw">class</span>(echo)</span></code></pre></div>
+<pre><code>## [1] &quot;cwlProcess&quot;
+## attr(,&quot;package&quot;)
+## [1] &quot;Rcwl&quot;</code></pre>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="get-started.html#cb11-1"></a><span class="kw">cwlClass</span>(echo)</span></code></pre></div>
+<pre><code>## [1] &quot;CommandLineTool&quot;</code></pre>
+<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="get-started.html#cb13-1"></a><span class="kw">cwlVersion</span>(echo)</span></code></pre></div>
+<pre><code>## [1] &quot;v1.0&quot;</code></pre>
+<div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb15-1"><a href="get-started.html#cb15-1"></a><span class="kw">baseCommand</span>(echo)</span></code></pre></div>
+<pre><code>## [1] &quot;echo&quot;</code></pre>
+<div class="sourceCode" id="cb17"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb17-1"><a href="get-started.html#cb17-1"></a><span class="kw">inputs</span>(echo)</span></code></pre></div>
+<pre><code>## inputs:
+##   sth (string):</code></pre>
+<div class="sourceCode" id="cb19"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb19-1"><a href="get-started.html#cb19-1"></a><span class="kw">outputs</span>(echo)</span></code></pre></div>
+<pre><code>## outputs:
+## output:
+##   type: stdout</code></pre>
+<p>The <code>inputs(echo)</code> will show the value once it is assigned in next
+step. Since we didn’t define the outputs for this tool, it will stream
+standard output to a temporary file by default.</p>
+<p>The third step is to assign values (here is “Hello World!”) for the
+input parameters.</p>
+<div class="sourceCode" id="cb21"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb21-1"><a href="get-started.html#cb21-1"></a>echo<span class="op">$</span>sth &lt;-<span class="st"> &quot;Hello World!&quot;</span></span>
+<span id="cb21-2"><a href="get-started.html#cb21-2"></a><span class="kw">inputs</span>(echo)</span></code></pre></div>
+<pre><code>## inputs:
+##   sth (string):  Hello World!</code></pre>
+<p>Now this <em>R</em> version of command line tool <code>echo</code> is ready to be
+executed.</p>
+<p>The function <code>runCWL</code> runs the tools in <em>R</em> and returns a list of: 1)
+actual command line that was executed, 2) filepath to the output, and
+3) running logs. The output directory by default takes the working
+directory, but can be specified in <code>outdir</code> argument.</p>
+<div class="sourceCode" id="cb23"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb23-1"><a href="get-started.html#cb23-1"></a>r1 &lt;-<span class="st"> </span><span class="kw">runCWL</span>(echo, <span class="dt">outdir =</span> <span class="kw">tempdir</span>())</span></code></pre></div>
+<pre><code>## [1;30mINFO[0m Final process status is success</code></pre>
+<div class="sourceCode" id="cb25"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb25-1"><a href="get-started.html#cb25-1"></a>r1</span></code></pre></div>
+<pre><code>## List of length 3
+## names(3): command output logs</code></pre>
+<div class="sourceCode" id="cb27"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb27-1"><a href="get-started.html#cb27-1"></a>r1<span class="op">$</span>command</span></code></pre></div>
+<pre><code>## [1] &quot;\033[1;30mINFO\033[0m [job echo.cwl] /private/tmp/docker_tmptw4l9_2r$ echo \\&quot;                
+## [2] &quot;    &#39;Hello World!&#39; &gt; /private/tmp/docker_tmptw4l9_2r/36a045913589936efd476118f8e7f986eb86e995&quot;</code></pre>
+<div class="sourceCode" id="cb29"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb29-1"><a href="get-started.html#cb29-1"></a><span class="kw">readLines</span>(r1<span class="op">$</span>output)</span></code></pre></div>
+<pre><code>## [1] &quot;Hello World!&quot;</code></pre>
+<div class="sourceCode" id="cb31"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb31-1"><a href="get-started.html#cb31-1"></a>r1<span class="op">$</span>logs</span></code></pre></div>
+<pre><code>##  [1] &quot;\033[1;30mINFO\033[0m /Users/qi31566/Library/Python/3.7/bin/cwltool 3.0.20200324120055&quot;                                                                                                                                   
+##  [2] &quot;\033[1;30mINFO\033[0m Resolved &#39;/var/folders/7t/9l4kkf_j2sqbpn321y9g5558z96ck_/T//RtmptDExzb/file82097749d3b5/echo.cwl&#39; to &#39;file:///var/folders/7t/9l4kkf_j2sqbpn321y9g5558z96ck_/T/RtmptDExzb/file82097749d3b5/echo.cwl&#39;&quot;
+##  [3] &quot;\033[1;30mINFO\033[0m [job echo.cwl] /private/tmp/docker_tmptw4l9_2r$ echo \\&quot;                                                                                                                                            
+##  [4] &quot;    &#39;Hello World!&#39; &gt; /private/tmp/docker_tmptw4l9_2r/36a045913589936efd476118f8e7f986eb86e995&quot;                                                                                                                            
+##  [5] &quot;\033[1;30mINFO\033[0m [job echo.cwl] completed success&quot;                                                                                                                                                                   
+##  [6] &quot;{&quot;                                                                                                                                                                                                                        
+##  [7] &quot;    \&quot;output\&quot;: {&quot;                                                                                                                                                                                                        
+##  [8] &quot;        \&quot;location\&quot;: \&quot;file:///var/folders/7t/9l4kkf_j2sqbpn321y9g5558z96ck_/T/RtmptDExzb/36a045913589936efd476118f8e7f986eb86e995\&quot;,&quot;                                                                                   
+##  [9] &quot;        \&quot;basename\&quot;: \&quot;36a045913589936efd476118f8e7f986eb86e995\&quot;,&quot;                                                                                                                                                      
+## [10] &quot;        \&quot;class\&quot;: \&quot;File\&quot;,&quot;                                                                                                                                                                                             
+## [11] &quot;        \&quot;checksum\&quot;: \&quot;sha1$a0b65939670bc2c010f4d5d6a0b3e4e4590fb92b\&quot;,&quot;                                                                                                                                                 
+## [12] &quot;        \&quot;size\&quot;: 13,&quot;                                                                                                                                                                                                    
+## [13] &quot;        \&quot;path\&quot;: \&quot;/var/folders/7t/9l4kkf_j2sqbpn321y9g5558z96ck_/T/RtmptDExzb/36a045913589936efd476118f8e7f986eb86e995\&quot;&quot;                                                                                               
+## [14] &quot;    }&quot;                                                                                                                                                                                                                    
+## [15] &quot;}&quot;                                                                                                                                                                                                                        
+## [16] &quot;\033[1;30mINFO\033[0m Final process status is success&quot;</code></pre>
+<p>Users can also have the log printed out by specifying <code>showLog = TRUE</code>.</p>
+<div class="sourceCode" id="cb33"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb33-1"><a href="get-started.html#cb33-1"></a>r1 &lt;-<span class="st"> </span><span class="kw">runCWL</span>(echo, <span class="dt">outdir =</span> <span class="kw">tempdir</span>(), <span class="dt">showLog =</span> <span class="ot">TRUE</span>)</span></code></pre></div>
+<pre><code>## }</code></pre>
+<p>A utility function <code>writeCWL</code> converts the <code>cwlProcess</code> object into 2
+files: a <code>.cwl</code> file for the command and <code>.yml</code> file for the inputs,
+which are the internal cwl files to be executed when <code>runCWL</code> is
+invoked. The internal execution requires a <code>cwl-runner</code> (e.g.,
+<code>cwltool</code>), which will be installed automatically with <code>runCWL</code>.</p>
+<div class="sourceCode" id="cb35"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb35-1"><a href="get-started.html#cb35-1"></a><span class="kw">writeCWL</span>(echo)</span></code></pre></div>
+<pre><code>##                                                                                   cwlout 
+## &quot;/var/folders/7t/9l4kkf_j2sqbpn321y9g5558z96ck_/T//RtmptDExzb/file82096fb8655b/echo.cwl&quot; 
+##                                                                                   ymlout 
+## &quot;/var/folders/7t/9l4kkf_j2sqbpn321y9g5558z96ck_/T//RtmptDExzb/file82096fb8655b/echo.yml&quot;</code></pre>
+
+</div>
+            </section>
+
+          </div>
+        </div>
+      </div>
+<a href="intro.html" class="navigation navigation-prev " aria-label="Previous page"><i class="fa fa-angle-left"></i></a>
+<a href="wrap-command-line-tools.html" class="navigation navigation-next " aria-label="Next page"><i class="fa fa-angle-right"></i></a>
+    </div>
+  </div>
+<script src="libs/gitbook-2.6.7/js/app.min.js"></script>
+<script src="libs/gitbook-2.6.7/js/lunr.js"></script>
+<script src="libs/gitbook-2.6.7/js/clipboard.min.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-search.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-sharing.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-fontsettings.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-bookdown.js"></script>
+<script src="libs/gitbook-2.6.7/js/jquery.highlight.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-clipboard.js"></script>
+<script>
+gitbook.require(["gitbook"], function(gitbook) {
+gitbook.start({
+"sharing": {
+"github": false,
+"facebook": true,
+"twitter": true,
+"linkedin": false,
+"weibo": false,
+"instapaper": false,
+"vk": false,
+"all": ["facebook", "twitter", "linkedin", "weibo", "instapaper"]
+},
+"fontsettings": {
+"theme": "white",
+"family": "sans",
+"size": 2
+},
+"edit": {
+"link": "https://github.com/rstudio/bookdown-demo/edit/master/02-getStarted.Rmd",
+"text": "Edit"
+},
+"history": {
+"link": null,
+"text": null
+},
+"view": {
+"link": null,
+"text": null
+},
+"download": ["Rcwl-Pipelines.pdf", "Rcwl-Pipelines.epub"],
+"toc": {
+"collapse": "subsection"
+}
+});
+});
+</script>
+
+</body>
+
+</html>
