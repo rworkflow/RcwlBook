@@ -16,18 +16,27 @@ description: "A manual to wrap Bioinformatics tools and workflows with Common Wo
 
 # Preface {-}
 
-This short book introduces the R packages, **Rcwl** and **RcwlPipelines**, to improve the way of building, managing and running Bioinformatics tools and pipelines. 
+This book introduces the _R/Bioconductor_ packages,
+[Rcwl](https://bioconductor.org/packages/Rcwl/) and
+[RcwlPipelines](https://bioconductor.org/packages/RcwlPipelines/), to
+improve the way of building, managing and running Bioinformatics tools
+and pipelines within _R_.
 
-The **Rcwl** package is built on top of the Common Workflow Language (CWL), and provides a simple and user-friendly way to wrap command line tools into data analysis pipelines in R. The **RcwlPipelines** package is a collection of Bioinformatics tools and pipelines based on **Rcwl**.
+The `Rcwl` package is built on top of the Common Workflow Language
+(CWL), and provides a simple and user-friendly way to wrap command
+line tools into data analysis pipelines in _R_. The `RcwlPipelines`
+package manages a collection of bioinformatics tools and pipelines
+based on `Rcwl`.
 
 ## R package installation
 
-The **Rcwl** and **RcwlPipelines** packages can be installed from Bioconductor or Github:
+The `Rcwl` and `RcwlPipelines` packages can be installed from
+Bioconductor or Github:
 
 ```{r eval=FALSE}
 BiocManager::install(c("Rcwl", "RcwlPipelines"))
 # or the development version
-BiocManager::install(c("hubentu/Rcwl", "hubentu/RcwlPipelines"))
+BiocManager::install(c("rworkflow/Rcwl", "rworkflow/RcwlPipelines"))
 ```
 
 To load the packages into R session:
@@ -38,30 +47,46 @@ library(RcwlPipelines)
 
 ## System requirements
 
-In addition to the R packages, the following tools are required to be installed to run the examples in this book.
+In addition to the _R_ packages, the following tools are also required
+to successfully run the tools/pipelines. If not locally available,
+these tools will be installed automatically, powered by the `basilisk`
+package.
 
 * python (>= 2.7)
 * cwltool (>= 1.0.2018)
 * nodejs
 
-The **cwltool** is the reference implementation of the Common Workflow Language, which is used to run the CWL scripts. The **nodejs** is required when the CWL scripts use JavaScript. You can find instructions to install these tools here:
-
-* <https://github.com/common-workflow-language/cwltool#install>
+The **cwltool** is the reference implementation of the Common Workflow
+Language, which is used to run the CWL scripts. The **nodejs** is
+required when the CWL scripts use JavaScript. More details about these
+tools can be found here:
+* <https://github.com/common-workflow-language/cwltool>
 * <https://nodejs.org>
 
 ## Docker
 
-The Docker container simplifies software installation and management, especially for bioinformatics tools/pipelines requiring different runtime environments and library dependencies. A CWL runner can perform this work automatically by pulling the Docker containers and mounting the paths of input files. 
+The Docker container simplifies software installation and management,
+especially for bioinformatics tools/pipelines requiring different
+runtime environments and library dependencies. A CWL runner can
+perform this work automatically by pulling the Docker containers and
+mounting the paths of input files.
 
-The Docker requirement is optional, as CWL scripts can also be run locally with all the dependencies pre-installed.
+The Docker requirement is optional, as CWL scripts can also be run
+locally with all the dependencies pre-installed.
 
 ## Structure of the book
 
 * Introduction
-* Components
-* Build CWL workflows
-* Run approaches
-* Case study
+* Get started 
+* Wrap command line tools
+* Writing Pipeline
+* Tool/pipeline execution
+* RcwlPipelines
+* DNAseq alignment
+* DNAseq variant calling
+* Bulk RNAseq 
+* Single cell RNAseq
+* miRNA
 
 ## R session information
 

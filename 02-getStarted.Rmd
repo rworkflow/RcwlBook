@@ -1,0 +1,82 @@
+\mainmatter
+
+# Get started 
+
+`cwlProcess` is the main constructor function to wrap a command line
+tool into an _R_ tool as a `cwlProcess` object (S4 class).  Let's
+start with a simple example to wrap the `echo` command and execute
+`echo hello world` in _R_.
+
+First, we need to define the input parameter for the base command
+`echo`, here it is a string without a prefix. An `id` argument is
+required here.
+
+```{r}
+input1 <- InputParam(id = "sth")
+```
+
+Second, we can construct a `cwlProcess` object by specifying the
+`baseCommand` for the command line tool, and `InputParamList` for the
+input parameters. 
+```{r}
+echo <- cwlProcess(baseCommand = "echo", inputs = InputParamList(input1))
+```
+
+Now we have converted the command line tool `echo` into an _R_ tool:
+an _R_ object of class `cwlProcess` with the name of `echo`. We can
+take a look at the this _R_ object and use some utility functions to
+extract specific information.
+
+```{r}
+echo
+class(echo)
+cwlClass(echo)
+cwlVersion(echo)
+baseCommand(echo)
+inputs(echo)
+outputs(echo)
+```
+
+The `inputs(echo)` will show the value once it is assigned in next
+step. Since we didn't define the outputs for this tool, it will stream
+standard output to a temporary file by default.
+
+The third step is to assign values (here is "Hello World!") for the
+input parameters.
+
+```{r}
+echo$sth <- "Hello World!"
+inputs(echo)
+```
+
+Now this _R_ version of command line tool `echo` is ready to be
+executed. 
+
+The function `runCWL` runs the tools in _R_ and returns a list of: 1)
+actual command line that was executed, 2) filepath to the output, and
+3) running logs. The output directory by default takes the working
+directory, but can be specified in `outdir` argument.
+
+```{r}
+r1 <- runCWL(echo, outdir = tempdir())
+r1
+r1$command
+readLines(r1$output)
+r1$logs
+```
+
+Users can also have the log printed out by specifying `showLog = TRUE`.
+
+```{r}
+r1 <- runCWL(echo, outdir = tempdir(), showLog = TRUE)
+```
+
+A utility function `writeCWL` converts the `cwlProcess` object into 2
+files: a `.cwl` file for the command and `.yml` file for the inputs,
+which are the internal cwl files to be executed when `runCWL` is
+invoked. The internal execution requires a `cwl-runner` (e.g.,
+`cwltool`), which will be installed automatically with `runCWL`.
+
+```{r}
+writeCWL(echo)
+```

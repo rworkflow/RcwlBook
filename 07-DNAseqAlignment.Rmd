@@ -1,0 +1,59 @@
+# DNAseq alignment
+
+The pipeline `tl_bwaMRecal` can be used to preprocess the fastq files
+from DNA sequencing. It can take paired fastq files, read groups from
+multiple batches as input.
+
+```{r}
+bwaMRecal <- cwlLoad("pl_bwaMRecal")
+inputs(bwaMRecal)
+```
+
+The pipeline includes three steps: BWA alignment, mark duplicate, and
+base recalibration. The steps can be a single tool or a sub-pipeline
+that includes several tools each.
+
+```{r}
+runs(bwaMRecal)
+```
+
+1. ``r names(runs(bwaMRecal))[[1]]``: BWA alignment step is a
+   sub-pipeline which includes the following tools:
+
+```{r}
+runs(runs(bwaMRecal)[[1]])
+```
+
+* `bwa`: to align fastqs and read groups to reference genome with `bwa`.
+* `sam2bam`: to convert the alignments from "sam" to "bam" format with
+`samtools`.
+* `sortBam`: to sort the "bam" file by coordinates with `samtools`.
+* `idxBam`: To index "bam" file with `samtools`.
+  
+2. ``r names(runs(bwaMRecal))[[2]]``: MarkDuplicates runs a single
+   command line tool `Picard` that identifies duplicate reads.
+
+```{r}
+runs(bwaMRecal)[[2]]
+```
+
+3. ``r names(runs(bwaMRecal))[[3]]``: Alignment recalibration is a
+   sub-pipeline that runs several tools from `GATK` toolkit.
+
+```{r}
+runs(runs(bwaMRecal)[[3]])
+```
+
+* `BaseRecalibrator` and `ApplyBQSR`: alignment recalibration by
+`GATK` toolkit.
+* `samtools_index`: to index bam file with `samtools`.
+* `samtools_flagstat` and `samtools_stats`: to summarize alignments
+  with `samtools`.
+
+The output of `bwaMRecal` pipeline includes the duplicates matrix from
+`markdup` step, final processed bam files and flag summary files from
+`BaseRecal` step.
+
+```{r}
+outputs(bwaMRecal)
+```

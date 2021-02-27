@@ -1,0 +1,87 @@
+# miRNA
+
+The `miRDeep2` is one of the most popular tools for discovering known
+and novel miRNAs from small RNA sequencing data. We have wrapped the
+mapping and quantification steps into an `Rcwl` pipeline which is
+ready to load and use. More details about `miRDeep2` can be found
+here: <https://github.com/rajewsky-lab/mirdeep2>.
+
+```{r}
+miRDeep2PL <- cwlLoad("pl_miRDeep2PL")
+plotCWL(miRDeep2PL)
+```
+
+Here We also use the data from the above GitHub repository as an example.
+<https://github.com/rajewsky-lab/mirdeep2/tree/master/tutorial_dir>
+
+```{r, eval=FALSE}
+git2r::clone("https://github.com/rajewsky-lab/mirdeep2", "data/miRNA")
+list.files("data/miRNA/tutorial_dir")
+```
+
+### Reference index
+
+First, we need to build indexes for the miRNA reference with the
+`Rcwl` tool `bowtie_build`. This is only required to be performed once
+for each refernce genome.
+
+```{r}
+bowtie_build <- cwlLoad("tl_bowtie_build")
+inputs(bowtie_build)
+```
+
+```{r, eval=FALSE}
+bowtie_build$ref <- "data/miRNA/tutorial_dir/cel_cluster.fa"
+bowtie_build$outPrefix <- "cel_cluster"
+idxRes <- runCWL(bowtie_build, outdir = "output/miRNA/genome",
+                 showLog = TRUE, logdir = "output/miRNA")
+```
+
+Then the indexed reference files are generated in the output directory
+defined in `outdir`.
+
+```{r}
+file.copy("data/miRNA/tutorial_dir/cel_cluster.fa",
+          "output/miRNA/genome/cel_cluster.fa")
+dir("output/miRNA/genome")
+```
+
+### Run miRDeep2 pipeline
+
+To run the pipeline for all samples parallelly, we need to prepare the
+inputs for arguments of `inputList` and `paramList`.
+
+```{r}
+inputs(miRDeep2PL)
+```
+
+To mimic multiple samples, here we just repeat to use the input reads
+as if they are two different samples.
+
+```{r}
+reads <- list(sample1 = "data/miRNA/tutorial_dir/reads.fa",
+              sample2 = "data/miRNA/tutorial_dir/reads.fa")
+
+inputList <- list(reads = reads)
+paramList <- list(adapter = "TCGTATGCCGTCTTCTGCTTGT",
+                  genome = "output/miRNA/genome/cel_cluster.fa",
+                  miRef = "data/miRNA/tutorial_dir/mature_ref_this_species.fa",
+                  miOther = "data/miRNA/tutorial_dir/mature_ref_other_species.fa",
+                  precursors = "data/miRNA/tutorial_dir/precursors_ref_this_species.fa",
+                  species = "C.elegans")
+```
+
+Let's run the pipeline with two computing nodes.
+
+```{r, eval=FALSE}
+mirRes <- runCWLBatch(miRDeep2PL, outdir = "output/miRNA",
+                      inputList, paramList,
+                      BPPARAM = BatchtoolsParam(
+                          workers = 2, cluster = "multicore"))
+```
+
+The results are collected in the output directory defined in the `outdir`. 
+
+```{r}
+dir("output/miRNA/sample1")
+```

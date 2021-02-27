@@ -1,0 +1,259 @@
+# Bulk RNAseq 
+
+This pipeline covers RNA-seq reads quality summary by `fastQC`,
+alignment by `STAR`, quantification by `featureCounts` and quality
+control by `RSeQC`.
+
+```{r, warning=FALSE}
+rnaseq_Sf <- cwlLoad("pl_rnaseq_Sf")
+plotCWL(rnaseq_Sf)
+```
+
+The pipeline includes 10 steps, each step runs a single command as
+follows:
+
+```{r}
+runs(rnaseq_Sf)
+```
+
+* `fastqc`: to run quality summary for raw fastqs with base command `fastqc`.
+* `STAR`: to align fastqs with `STAR`.
+* `sortBam`: to sort bam files with `samtools`.
+* `samtools_index`: to index aligned bam file with `samtools`.
+* `samtools_flagstat`: to summarize alignment flags with `samtools`.
+* `featureCounts`: to quantify gene abundance with `featureCounts`.
+* `gtfToGenePred`: to convert GTF annotation to 'genePred' format with `RSeQC`.
+* `genePredToBed`: to convert 'genePred' annotation to 'bed' format with `RSeQC`.
+* `r_distribution`: to run read distribution over genome features with `RSeQC`. 
+* `gCoverage`: to summarize read coverage over gene body with `RSeQC`.
+
+The `rnaseq_Sf` pipepine output includes the QC result from `fastqc`
+step, indexed bam files from `samtools_index` step, log and read
+counts from `STAR` step, flag summary from `samtools_flagstat` step,
+feature counts from `featureCounts` step, alignment QC results from
+`RSeQC` steps.
+
+```{r}
+outputs(rnaseq_Sf)
+```
+
+## Prepare data
+
+An RNASeq test data with paired-end fastq files for 6 samples can be
+downloaded from [genomedata](http://genomedata.org/rnaseq-tutorial).
+Create a local directory and follow the code below to download and
+uncompress.
+
+```{r, eval=FALSE}
+dir.create("data/RNAseq", recursive = TRUE)
+download.file("http://genomedata.org/rnaseq-tutorial/HBR_UHR_ERCC_ds_5pc.tar",
+              "data/RNAseq/HBR_UHR_ERCC_ds_5pc.tar")
+untar("data/RNAseq/HBR_UHR_ERCC_ds_5pc.tar",
+      exdir = "data/RNAseq/")
+```
+
+## Submit parallel jobs
+
+Powered by `BiocParallel`,`Rcwl` supports parallel job running for
+multiple samples using the `runCWLBatch` function. 
+
+The `BPPARAM` argument in `runCWLBatch()` defines the parallel
+parameters. It can be defined by `BiocParallel::BatchtoolsParam`
+function, where the `cluster` argument takes different values for
+different cluster job manager, such as "multicore", "sge" and
+"slurm". More details about available options can be checked by
+`?BiocParallel::BatchtoolsParam`.
+
+```{r}
+library(BiocParallel)
+```
+
+```{r, eval=FALSE}
+bpparam <- BatchtoolsParam(workers = 2, cluster = "sge",
+                           template = batchtoolsTemplate("sge"))
+```
+
+In the following example, we are using "multicore" for the parallel
+running.
+
+```{r}
+bpparam <- BatchtoolsParam(
+    workers = 2, cluster = "multicore")
+```
+
+When submitting parallel jobs using `runCWLBatch` function, two other
+arguments: `inputList` and `paramList`, need to be defined.
+
+The `inputList` argument is required to be a list of input parameter
+values for samples that are to be computed parallelly. **NOTE** that
+the names of the list must be consistent with the ids of input
+parameters. In this example, they are: 
+
+* `in_seqfiles`: A list with the fastq files of each sample in each
+  element. The names of the list need to be defined and can be the
+  sample IDs. The length of the list will be the same as the number of
+  samples, so that the list of samples can be assigned to different
+  nodes for parallel computing. Here we only use 2 samples for
+  demonstration purposes.
+* `in_prefix`: A list of sample IDs.
+
+```{r}
+files <- normalizePath(list.files("data/RNAseq/", ".gz",
+                                  full.names = TRUE))[1:4]
+files <- tapply(files, substring(basename(files), 1, 8), as.list)
+inputList <- list(in_seqfiles = files,
+                  in_prefix = as.list(names(files)))
+```
+
+The `paramList` argument is required to be a list of input parameter
+values that are to be shared for all parallelly running samples. In
+this example, they are: 
+
+* `in_genomeDir`: The reference genome indexes for STAR.
+* `in_GTFfile`: The gene annotation file in GTF format.
+* `in_runThreadN`: The number of threads to run for each job.
+
+```{r}
+paramList <- list(
+    in_genomeDir = "data/resources/GRCh38_chr22",
+    in_GTFfile = "data/resources/GRCh38_chr22/gencode.v32.annotation_chr22.gtf",
+    in_runThreadN = 2
+)
+```
+
+Here we can also modify the default argument values in some steps of a
+pipeline. For example,
+
+```{r}
+arguments(rnaseq_Sf, "STAR")[1:2]
+arguments(rnaseq_Sf, "STAR")[[2]] <- "2"
+arguments(rnaseq_Sf, "STAR")[1:2]
+```
+
+Now that the fastqc files of each sample will be submitted to
+different nodes to run the whole pipeline parallelly. 
+
+```{r, eval=FALSE}
+res <- runCWLBatch(cwl = rnaseq_Sf,
+                   outdir = "output/RNAseq_bulk",
+                   inputList = inputList,
+                   paramList = paramList,
+                   BPPARAM = bpparam,
+                   showLog = TRUE)
+```
+Pipeline results are collected in the output directory (defined in
+`outdir`) for each sample.
+
+```{r}
+dir("output/RNAseq_bulk")
+```
+
+## QC Summary
+
+The tool `multiqc` can aggregate results from the multiple outputs of
+the pipeline and generate a single page report, which also was
+implemented in the `RcwlPipelines` package:
+
+```{r, eval=FALSE}
+multiqc$dir <- "output/RNASeq_bulk"
+multiqc
+```
+
+We can also run the tool using `Rcwl` locally with the option `docker
+= TRUE`:
+
+```{r, eval=FALSE}
+runCWL(multiqc, stderr = "", Args = "--preserve-entire-environment", docker = FALSE)
+```
+
+## Abundances summary
+
+Here we use the _R/Bioconductor_ package `edgeR` functions to
+calculate the RPKM and CPM abundances.
+
+```{r}
+countfiles <- list.files("output/RNAseq_bulk", "featureCounts.txt$",
+                         recursive = TRUE, full.names = TRUE)
+samples <- basename(dirname(countfiles))
+
+rExp <- function(countfile){
+    count1 <- read.table(countfile, header = TRUE)[, c(1,6,7)]
+    rpkm1 <- edgeR::rpkm(count1[,3,drop=F], gene.length = count1$Length)
+    cpm1 <- edgeR::cpm(count1[,3])
+    count1 <- data.frame(count1, rpkm1, cpm1)
+    colnames(count1)[3:5] <- c("count", "rpkm", "cpm")
+    return(count1)
+}
+```
+
+```{r}
+head(rExp(countfiles[1]))
+```
+
+We combine the files into one file, and then the data is ready for
+statistical analysis using _R/Bioconductor_ packages, such as `DESeq2`
+or `edgeR`.
+
+
+```{r, eval=FALSE}
+for(i in 1:length(samples)) {
+    exp1 <- rExp(countfiles[i])
+    write.table(exp1, file = paste0("output/RNAseq_bulk", samples[i],
+                                    "/", samples[i], "_abundance.tsv"),
+                row.names = FALSE, quote = FALSE, sep = "\t")
+}
+```
+
+## transcriptome quantification
+
+There are many tools available for transcriptome quantification, such
+as kallisto, StringTie, salmon, and Trinity. Here show the usage of
+`Kallisto` and `salmon`.
+
+### Kallisto
+
+The kallisto is a tool to quantify transcript abundance with raw fastq
+reads and indexed reference transcriptomes. The `Rcwl` tool of
+`kallisto_index` below is used to build an index file from reference
+transcriptome fasta.
+
+```{r}
+kallisto_index <- cwlLoad("tl_kallisto_index")
+```
+
+```{r, eval=FALSE}
+inputs(kallisto_index)
+kallisto_index$fasta <- "data/resources/gencode.v33.transcripts.fa"
+kallisto_index$index <- "gencode.v33.transcripts_kallisto"
+runCWL(kallisto_index, outdir = "data/resources/kallisto", showLog = TRUE)
+```
+
+The `Rcwl` tool `kallisto_quant` runs the quantification algorithm to
+estimate the transcripts expression abundances.
+
+```{r}
+kallisto_quant <- cwlLoad("tl_kallisto_quant")
+```
+
+```{r, eval=FALSE}
+inputList <- list(fastq = files)
+paramList <- list(index = "data/resources/gencode.v33.transcripts_kallisto",
+                  threads = 16)
+bpparam <- BatchtoolsParam(workers = length(samples),
+                           cluster = "multicore")
+                           
+res2 <- runCWLBatch(kallisto_quant, outdir = "output/RNAseq_bulk/kallisto",
+                    inputList, paramList,
+                    BPPARAM = bpparam,
+                    log = TRUE, logdir = ".")
+```
+
+Then the tool results are collected here: 
+
+```{r}
+list.files("output/RNAseq_bulk/kalisto", "abundance")
+```
+
+### salmon
+
+To be added.

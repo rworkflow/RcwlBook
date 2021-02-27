@@ -1,0 +1,94 @@
+# Tool/pipeline execution
+
+## Running Tools in Docker
+
+The CWL can work with docker to simplify your software management and
+communicate files between host and container. The docker container can
+be defined by the `hints` or `requirements` option.
+
+```{r}
+d1 <- InputParam(id = "rfile", type = "File")
+req1 <- requireDocker("r-base")
+doc <- cwlProcess(baseCommand = "Rscript",
+                inputs = InputParamList(d1),
+                stdout = "output.txt",
+                hints = list(req1))
+doc$rfile <- r4$output
+```
+```{r, eval=FALSE}
+r6 <- runCWL(doc)
+```
+
+The tools defined with docker requirements can also be run locally by
+disabling the docker option. In case your `Rscript` depends some local
+libraries to run, an option from `cwltools`,
+"--preserve-entire-environment", can be used to pass all environment
+variables.
+
+```{r}
+r6a <- runCWL(doc, docker = FALSE, outdir = tempdir(),
+              cwlArgs = "--preserve-entire-environment")
+```
+
+## Running Tools in Cluster server
+
+The CWL can also work in high performance clusters with batch-queuing
+system, such as SGE, PBS, SLURM and so on, using the Bioconductor
+package `BiocParallel`. Here is an example to submit jobs with
+"Multicore" and "SGE".
+
+```{r, eval=FALSE}
+library(BiocParallel)
+sth.list <- as.list(LETTERS)
+names(sth.list) <- LETTERS
+
+## submit with multicore
+result1 <- runCWLBatch(cwl = echo, outdir = tempdir(),
+                       inputList = list(sth = sth.list),
+                       BPPARAM = MulticoreParam(26))
+
+## submit with SGE
+result2 <- runCWLBatch(cwl = echo, outdir = tempdir(),
+                       inputList = list(sth = sth.list),
+                       BPPARAM = BatchtoolsParam(workers = 26,
+                                                 cluster = "multicore"))
+                       
+```
+
+## Web Application
+
+### cwlProcess example
+
+Here we build a tool with different types of input parameters.
+
+```{r}
+e1 <- InputParam(id = "flag", type = "boolean",
+                 prefix = "-f", doc = "boolean flag")
+e2 <- InputParam(id = "string", type = "string", prefix = "-s")
+e3 <- InputParam(id = "option", type = "string", prefix = "-o")
+e4 <- InputParam(id = "int", type = "int", prefix = "-i", default = 123)
+e5 <- InputParam(id = "file", type = "File",
+                 prefix = "--file=", separate = FALSE)
+e6 <- InputParam(id = "array", type = "string[]", prefix = "-A",
+                 doc = "separated by comma")
+mulEcho <- cwlProcess(baseCommand = "echo", id = "mulEcho",
+                 label = "Test parameter types",
+                 inputs = InputParamList(e1, e2, e3, e4, e5, e6),
+                 stdout = "output.txt")
+mulEcho
+```
+
+### cwlProcess to Shiny App
+
+Some input parameters can be predefined in a list, which will be
+converted to select options in the webapp. An `upload` parameter can
+be used to defined whether to generate an upload interface for the
+file type option. If FALSE, the upload field will be text input (file
+path) instead of file input.
+
+```{r, eval=FALSE}
+inputList <- list(option = c("option1", "option2"))
+app <- cwlShiny(mulEcho, inputList, upload = TRUE)
+runApp(app)
+```
+![shinyApp](images/cwlShiny.png)

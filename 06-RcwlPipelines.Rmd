@@ -1,0 +1,210 @@
+# RcwlPipelines
+
+## Rcwl recipes and CWL scripts
+
+The _R_ scripts to build the CWL tools and pipelines are now residing
+in a dedicated [GitHub
+repository](https://github.com/rworkflow/RcwlRecipes), which is
+intended to be a community effort to collect and contribute
+Bioinformatics tools and pipelines using `Rcwl` and CWL. Script names
+are prefixed with `tl_` and `pl_` for tools and pipelines
+respectively.
+
+## RcwlPipelines core functions 
+
+### `cwlUpdate`
+
+The `cwlUpdate` function syncs the current `Rcwl` recipes and returns
+a `cwlHub` object which contains the most updated `Rcwl` recipes. The
+`mcols()` function returns all related information about each
+available tool or pipeline. Currently, we have integrated 113 command
+line tools and 26 pipelines.
+
+The recipes will be locally cached, so users don't need to call
+`cwlUpdate` every time unless they want to use a tool/pipeline that is
+newly added to `RcwlPipelines`. 
+
+```{r, message=FALSE}
+atls <- cwlUpdate(branch = "dev") ## sync the tools/pipelines.
+atls
+```
+
+Currently, we have integrated `r sum(Type(atls)=="tool")` command
+line tools and `r sum(Type(atls)=="pipeline")` pipelines.
+
+```
+table(mcols(atls)$Type)
+```
+
+We can also get the commands and docker containers for specific tool or pipeline. 
+
+```{r}
+mcols(atls)[, c("Command", "Container")]
+```
+
+### `cwlSearch`
+
+We can use (multiple) keywords to search for specific tools/pipelines
+of interest, which internally search the `mcols` of "rname", "rpath",
+"fpath", "Command" and "Containers". Here we show how to search the
+alignment tool `bwa mem`.
+
+```{r}
+t1 <- cwlSearch(c("bwa", "mem"))
+t1
+mcols(t1)
+```
+
+### `cwlLoad`
+
+The last core function `cwlLoad` loads the `Rcwl` tool/pipeline into
+the _R_ working environment. The code below loads the tool with a
+user-defined name `bwa` to do the read alignment. 
+
+```{r}
+bwa <- cwlLoad(title(t1)[1])  ## "tl_bwa"
+bwa <- cwlLoad(mcols(t1)$fpath[1]) ## equivalent to the above. 
+bwa
+```
+
+Now the _R_ tool of `bwa` is ready to use. 
+
+## Tool/pipeline customization
+
+To fit users' specific needs，the existing tool or pipline can be
+easily customized. Here we use the `rnaseq_Sf` pipeline to demonstrate
+how to access and change the arguments of a specific tool inside a
+pipeline. This pipeline covers RNA-seq reads quality summary by
+`fastQC`, alignment by `STAR`, quantification by `featureCounts` and
+quality control by `RSeQC`.
+
+```{r, warning=FALSE}
+rnaseq_Sf <- cwlLoad("pl_rnaseq_Sf")
+plotCWL(rnaseq_Sf)
+```
+
+There are many default arguments defined for the tool of `STAR` inside
+the pipeline. Users might want to change some of them. For example, we
+can change the value for `--outFilterMismatchNmax` argument from 2 to
+5 for longer reads.
+
+```{r}
+arguments(rnaseq_Sf, "STAR")[5:6]
+arguments(rnaseq_Sf, "STAR")[[6]] <- 5
+arguments(rnaseq_Sf, "STAR")[5:6]
+```
+
+We can also change the docker image for a specific tool (e.g., to a
+specific version). First, we search for all available docker images
+for `STAR` in biocontainers repository. The Source server could be
+[quay](https://quay.io/) or [dockerhub](https://hub.docker.com).
+
+```{r}
+searchContainer("STAR", repo = "biocontainers", source = "quay")
+```
+
+Then, we can change the `STAR` version into 2.7.8a (tag name: 2.7.8a--0). 
+
+```{r}
+requirements(rnaseq_Sf, "STAR")[[1]]
+requirements(rnaseq_Sf, "STAR")[[1]] <- requireDocker(
+    docker = "quay.io/biocontainers/star:2.7.8a--0")
+requirements(rnaseq_Sf, "STAR")[[1]]
+```
+
+## Build a pipeline
+
+We can build a pipline using the available tools. Here we demonstrate
+how to build a simple alignment pipeline with mapping and marking
+duplicates.
+
+First, we check whether the required tools (bwa, samtools and picard
+markduplicates) are available in `RcwlPipelines`.
+
+```{r}
+tls <- cwlSearch("bwa|sam2bam|sortBam|samtools_index|markdup",
+                 type = "tool")
+tls
+```
+
+Then we load all the required tools. 
+
+```{r}
+bwa <- cwlLoad("tl_bwa")
+bwa_index <- cwlLoad("tl_bwa_index")
+markdup <- cwlLoad("tl_markdup")
+sam2bam <- cwlLoad("tl_sam2bam")
+samtools_index <- cwlLoad("tl_samtools_index")
+sortBam <- cwlLoad("tl_sortBam")
+```
+
+Next, we will need to define the input parameters for the pipeline
+(instead of for each tool).
+
+```{r}
+p1 <- InputParam(id = "threads", type = "int")
+p2 <- InputParam(id = "RG", type = "string")
+p3 <- InputParam(id = "Ref", type = "string")
+p4 <- InputParam(id = "FQ1", type = "File")
+p5 <- InputParam(id = "FQ2", type = "File?")
+```
+
+Then we define the pipeline steps, to connect the inputs and outputs
+of each tool to form a pipeline. 
+
+```{r}
+## bwa
+s1 <- cwlStep(id = "bwa", run = bwa,
+              In = list(threads = "threads",
+                        RG = "RG",
+                        Ref = "Ref",
+                        FQ1 = "FQ1",
+                        FQ2 = "FQ2"))
+## sam to bam
+s2 <- cwlStep(id = "sam2bam", run = sam2bam,
+              In = list(sam = "bwa/sam"))
+## sort bam
+s3 <- cwlStep(id = "sortBam", run = sortBam,
+              In = list(bam = "sam2bam/bam"))
+## mark duplicates
+s4 <- cwlStep(id = "markdup", run = markdup,
+              In = list(ibam = "sortBam/sbam",
+                        obam = list(
+                            valueFrom="$(inputs.ibam.nameroot).mdup.bam"),
+                        matrix = list(
+                            valueFrom="$(inputs.ibam.nameroot).markdup.txt")))
+## index bam
+s5 <- cwlStep(id = "idxBam", run = samtools_index,
+              In = list(bam = "markdup/mBam"))
+```
+
+Last, we will define the pipeline outputs and connect all the above
+defined steps into a new pipeline.
+
+```{r}
+req1 <- requireStepInputExpression()
+req2 <- requireJS()
+## outputs
+o1 <- OutputParam(id = "Bam", type = "File", outputSource = "markdup/mBam")
+o2 <- OutputParam(id = "Idx", type = "File", outputSource = "idxBam/idx")
+## cwlWorkflow
+Align <- cwlWorkflow(requirements = list(req1, req2),
+                     inputs = InputParamList(p1, p2, p3, p4, p5),
+                     outputs = OutputParamList(o1, o2))
+## build pipeline
+Align <- Align + s1 + s2 + s3 + s4 + s5
+```
+
+Now the pipeline is successfully built and ready for use. We can
+visualize the pipeline with `plotCWL` from the `Rcwl` package.
+
+```{r}
+plotCWL(Align)
+```
+
+
+
+
+
+
+

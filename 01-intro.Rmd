@@ -1,70 +1,45 @@
 \mainmatter
-
+	
 # Introduction {#intro}
 
-<!-- - Gap between BioInfo and BioC -->
-<!--   + Heavy BioInfo tools and Pipelines beyond BioC -->
+The bioinformatics community increasingly relies on 'workflow'
+frameworks to manage large and complex biomedical data (Köster and
+Rahmann, 2012; Di Tommaso et al., 2017). One solution facilitating
+portable, reproducible, and scalable workflows across a variety of
+software and hardware environments is the Common Workflow Language
+(CWL) (Amstutz et al., 2016). 
 
-<!-- - Tools to build pipelines and generate reproducible reports are required  -->
-<!--   + Standardization of BioInfo Pipelines for best practice -->
-<!--   + Portable pipelines -->
-<!--   + Reproducible analysis and report -->
-<!--   + Easy to use in different platforms -->
+"The Common Workflow Language ([CWL](https://www.commonwl.org/)) is a
+specification for describing analysis workflows and tools in a way
+that makes them portable and scalable across a variety of software and
+hardware environments, from workstations to **cluster, cloud, and high
+performance computing (HPC)** environments."
 
-## Common Workflow Language
-"The Common Workflow Language (CWL) is a specification for describing
-analysis workflows and tools in a way that makes them portable and
-scalable across a variety of software and hardware environments, from
-workstations to **cluster, cloud, and high performance computing (HPC)**
-environments."
+The CWL has been widely adopted by large biomedical projects such as
+The Cancer Genome Atlas (TCGA) (Weinstein et al., 2013) and Galaxy
+(Afgan et al., 2018). However, as a domain-specific language, the
+implementation of CWL requires a level of expertise that is often
+beyond the capabilities of wet-lab researchers and even skilled data
+scientists. In addition, the impact of CWL pipelines is weakened by
+poor integration with downstream statistical analysis tools such as R
+and Bioconductor (Huber et al., 2015; Amezquita et al., 2020). 
 
-<https://www.commonwl.org/>
+In this book, we introduce a _Bioconductor_ toolchain for use and
+development of reproducible bioinformatics pipelines in CWL using
+`Rcwl` and `RcwlPipelines`. `Rcwl` provides a familiar _R_ interface
+to, and expands the scope of, CWL. 
 
-- To wrap tool and workflow parameters in a standard format
+`Rcwl` enables best practices and standardized data flow between
+different tools, and promotes modularization for easy sharing of
+established pipelines or critical steps. `RcwlPipelines` is a
+collection of commonly used bioinformatics tools and pipeline recipes
+based on `Rcwl`.`RcwlPipelines` develops a community-driven platform
+for open source, open development, and open review of best-practice
+CWL bioinformatics pipelines.
 
-- Capable of invoking tools from Docker containers
-
-- Widely used...
-
-## First example
-The main class and constructor function is `cwlParam`, which wraps a command line tool and its parameters in a `cwlParam` object. Let's start with a simple example, `echo hello world`.
-
-First, we load the package and define the input parameter for "echo", a string without a prefix. Just an `id` option required here:
-```{r}
-input1 <- InputParam(id = "sth")
-```
-
-Second, we create a `cwlParam` object with `baseCommand` for the command to execute and `InputParamList` for the input parameters.
-```{r}
-echo <- cwlParam(baseCommand = "echo", inputs = InputParamList(input1))
-```
-
-Now we have a command object to run. Let's send a string "Hello World!" to the object. Without defining the outputs, it will stream standard output to a temporary file by default.
-```{r}
-echo$sth <- "Hello World!"
-echo
-```
-
-## Test run
-The function `runCWL` is used to run the CWL object by invoking the python tool `cwltool`. The return will be a list including the command executed, temporary output and logs. The output directory is the current folder by default, but it can be changed by setting `outdir` option. All standard out and standard error streams can also be printed by setting `stderr = ""`.
-```{r}
-r1 <- runCWL(echo, outdir = tempdir())
-r1
-```
-
-Here we can check the output to ensure the code did what we expected.
-```{r}
-r1$output
-readLines(r1$output)
-```
-
-The executed command was returned in the result list. It shows the command that we have defined to execute.
-```{r}
-r1$command
-```
-
-The log shows the details of how the `cwltool` works with CWL scripts.
-```{r}
-r1$log
-```
-The `runCWL` generated two scripts with the default `tempfile` prefix, the tool wrapper CWL file and the input YML file. The `cwltool` parses the two scripts and translates them into the command shown before. The output is not defined in the `cwlParam` object, so the command output was returned to __stdout__ by default.
+`Rcwl` and `RcwlPipelines` reduces the learning curve required to
+apply findable, accessible, interoperable, and reusable (FAIR)
+principles to the analysis of multi-omics biological experiments, and
+to promote community-wide sharing of cloud-ready bioinformatics
+workflows.
+	
